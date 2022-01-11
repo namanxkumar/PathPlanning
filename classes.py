@@ -19,7 +19,7 @@ class Map:
         self.resolution = resolution 
         self.grid_y = self.convert_to_grid_coord(self.max_y, self.min_y) # in grid coordinates
         self.grid_x = self.convert_to_grid_coord(self.max_x, self.min_x) # in grid coordinates
-        self.obstacles = np.zeros((self.grid_x, self.grid_y)) # in grid coordinates
+        self.obstacles = np.zeros((self.grid_x+1, self.grid_y+1)) # in grid coordinates
         self.obstacle_dims = self.obstacles.shape # in grid coordinates
         self.ox = []
         self.oy = []
@@ -33,7 +33,7 @@ class Map:
             start: a tuple of (x, y)
             end: a tuple of (x, y)
         """
-        self.obstacles[self.convert_to_grid_coord(xt[0], self.min_x):self.convert_to_grid_coord(xt[1], self.min_x), self.convert_to_grid_coord(y, self.min_y)-1] = 1
+        self.obstacles[self.convert_to_grid_coord(xt[0], self.min_x):self.convert_to_grid_coord(xt[1], self.min_x), self.convert_to_grid_coord(y, self.min_y)] = 1
         self.obstacle_dims = self.obstacles.shape
         for i in range(xt[0], xt[1]):
             self.ox.append(i)
@@ -46,14 +46,14 @@ class Map:
             start: a tuple of (x, y)
             end: a tuple of (x, y)
         """
-        self.obstacles[self.convert_to_grid_coord(x, self.min_x)-1, self.convert_to_grid_coord(yt[0], self.min_y):self.convert_to_grid_coord(yt[1], self.min_y)] = 1
+        self.obstacles[self.convert_to_grid_coord(x, self.min_x), self.convert_to_grid_coord(yt[0], self.min_y):self.convert_to_grid_coord(yt[1], self.min_y)] = 1
         self.obstacle_dims = self.obstacles.shape
         for i in range(yt[0], yt[1]):
             self.ox.append(x)
             self.oy.append(i)
 
 class Node:
-    def __init__(self, x, y, cost, parent):
+    def __init__(self, x, y, cost, parent, heuristic=0):
         """
             Initialize a node object.
             x: x coordinate
@@ -66,7 +66,7 @@ class Node:
         self.loc = (x, y)
         self.parent = parent
         self.g = cost # g(n) = cost to reach this node
-        self.h = 0 # h(n) = heuristic cost to reach the goal
+        self.h = heuristic # h(n) = heuristic cost to reach the goal
         self.f = self.g + self.h # f(n) = g(n) + h(n)
     
     def update(self, g, h):

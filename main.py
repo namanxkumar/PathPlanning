@@ -24,7 +24,7 @@ class AStar:
     def calculate_heuristic(node1: Node, node2: Node):
         return math.sqrt((node1.x - node2.x)**2 + (node1.y - node2.y)**2) 
 
-    def get_neighbours(self, node: Node) -> List[Node]:
+    def get_neighbours(self, node: Node, goal: Node) -> List[Node]:
         """
             Get all the neighbours of a node.
             input:
@@ -37,11 +37,14 @@ class AStar:
             for j in range(node.y - 1, node.y + 2):
                 if i == node.x and j == node.y:
                     continue
-                if i < 0 or i >= self.map.grid_x or j < 0 or j >= self.map.grid_y:
+                if i <= 0 or i >= self.map.grid_x or j <= 0 or j >= self.map.grid_y:
                     continue
                 if self.map.obstacles[i, j] == 1:
                     continue
-                neighbours.append(Node(i, j, node.g + 1, node))
+                add = math.sqrt(2)
+                if i == node.x or j == node.y:
+                    add = 1
+                neighbours.append(Node(i, j, node.g + add, node, heuristic=self.calculate_heuristic(node, goal)))
         return neighbours
     
     def reconstruct_path(self, node: Node):
@@ -57,7 +60,7 @@ class AStar:
         current = node
         while current is not None:
             rx.append(self.convert_to_graph_coord(current.x, self.map.min_x))
-            ry.append(self.convert_to_grid_coord(current.y, self.map.min_y))
+            ry.append(self.convert_to_graph_coord(current.y, self.map.min_y))
             current = current.parent
         return rx[::-1], ry[::-1]
 
@@ -83,8 +86,9 @@ class AStar:
         open_set[hash(start_node)] = start_node
 
         while len(open_set) > 0:
-            current: Node = min(open_set.values(), key=lambda x:x.f)
+            current: Node = min(open_set.values(), key=lambda x:x.g)
             if current.x == goal_node.x and current.y == goal_node.y:
+                print(current.x, current.y)
                 rx, ry = self.reconstruct_path(current)
                 return rx, ry
             
@@ -102,7 +106,7 @@ class AStar:
             open_set.pop(hash(current))
             closed_set[hash(current)] = current
 
-            for node in self.get_neighbours(current):
+            for node in self.get_neighbours(current, goal_node):
                 if hash(node) in closed_set:
                     continue
                 if hash(node) not in open_set:
@@ -113,7 +117,7 @@ class AStar:
                         open_set[hash(node)].parent = current
 
 def main():
-    print(__file__ + " start!!")
+    print("Planning...")
 
     # start and goal position
     sx = 10.0  # [m]
@@ -122,14 +126,17 @@ def main():
     gy = 50.0  # [m]
     resolution = 2.0  # [m]
 
-    map = Map((sx, sy), (gx, gy), (-10, -10), (60, 60), resolution)
+    map = Map((sx, sy), (gx, gy), (-10, -10), (61, 61), resolution)
 
     # set obstacle positions
     map.addObstacleX((-10, 60), -10)
     map.addObstacleY(60, (-10, 60))
     map.addObstacleX((-10, 60), 60)
-    map.addObstacleY(-10, (-10, -60))
+    map.addObstacleY(-10, (-10, 60))
     map.addObstacleY(20, (-10, 40))
+    map.addObstacleY(40, (21, 60))
+    map.addObstacleX((30, 41), 20)
+    map.addObstacleX((20, 30), 40)
 
     # show graph
 
@@ -142,7 +149,6 @@ def main():
 
     a_star = AStar(map)
     rx, ry = a_star.plan(sx, sy, gx, gy)
-
     if show_animation:  # pragma: no cover
         plt.plot(rx, ry, "-r")
         plt.pause(0.001)
