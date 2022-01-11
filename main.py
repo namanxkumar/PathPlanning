@@ -96,6 +96,7 @@ class AStar:
             if show_animation:  # pragma: no cover
                 plt.plot(self.convert_to_graph_coord(current.x, self.map.min_x),
                          self.convert_to_graph_coord(current.y, self.map.min_x), "xc")
+        
                 # for stopping simulation with the esc key.
                 plt.gcf().canvas.mpl_connect('key_release_event',
                                              lambda event: [exit(
@@ -138,6 +139,8 @@ def main():
     map.addObstacleX((30, 41), 20)
     map.addObstacleX((20, 30), 40)
 
+    
+
     # show graph
 
     if show_animation:  # pragma: no cover
@@ -147,13 +150,14 @@ def main():
         plt.grid(True)
         plt.axis("equal")
 
+
     a_star = AStar(map)
     rx, ry = a_star.plan(sx, sy, gx, gy)
     if show_animation:  # pragma: no cover
         plt.plot(rx, ry, "-r")
+
         plt.pause(0.001)
         plt.show()
-
 
 if __name__ == '__main__':
     main()
